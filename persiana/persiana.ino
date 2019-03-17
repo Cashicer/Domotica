@@ -5,11 +5,11 @@
 */
 
 // Definicion de variables y pines asociados
-int botUp = 7;
-int botDown = 5;
-int botStop = 6;
-int relUp = 11;
-int relDown = 12;
+int botUp = 4;    //D2
+int botDown = 16; //D0
+int botStop = 5;  //D1
+int relUp = 13;   //D7
+int relDown = 12; //D6
 
 void setup() {
   // put your setup code here, to run once:
