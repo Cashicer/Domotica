@@ -1,5 +1,6 @@
 /*
    Control de la persiana de una habitacion mediante 3 pulsadores
+   v1.0 Implementado servidor web
    Author: Javier Gallego Carracedo
    11 Febrero 2019
 */
@@ -55,15 +56,15 @@ void loop() {
 
   if (digitalRead(botUp) == LOW) {
     while (digitalRead(botUp) == LOW) {}
-    estado = 1;
+    estado = 2;
   }
   else if (digitalRead(botDown) == LOW) {
     while (digitalRead(botDown) == LOW) {}
-    estado = 2;
+    estado = 3;
   }
   else if (digitalRead(botStop) == LOW) {
     while (digitalRead(botStop) == LOW) {}
-    estado = 0;
+    estado = 1;
   }
 
   // servidor web
@@ -80,42 +81,43 @@ void loop() {
     client.flush();
 
     int val;
-    String s = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE HTML>\r\n<html>\r\n";
-    if ( req.indexOf("/gpio/0") != -1)
-    {
-      estado = 0;
-      s += "Parada";
-    }
-    else if (req.indexOf("/gpio/1") != -1)
+    String s = "HTTP/1.1 200 OK\r\nContent-Type: text/json\r\n\r\n{\"status\":\"";
+    if ( req.indexOf("/gpio/stop") != -1)
     {
       estado = 1;
-      s += "Subiendo";
+      s += "Parada\"";
     }
-    else if (req.indexOf("/gpio/2") != -1)
+    else if (req.indexOf("/gpio/up") != -1)
     {
       estado = 2;
-      s += "Bajando";
+      s += "Subiendo\"";
+    }
+    else if (req.indexOf("/gpio/down") != -1)
+    {
+      estado = 3;
+      s += "Bajando\"";
     }
     else
     { Serial.println("invalid request");
+      estado = 1;
       client.stop();
       return;
     }
-    s += "</html>\n";
+    s += "}";
     client.print(s);                    // Enviar el resultado de val al cliente
     delay(1);
     Serial.println("Client disonnected");
   }
 
-  if (estado == 1) {
+  if (estado == 2) {
     digitalWrite(relDown, HIGH);
     digitalWrite(relUp, LOW);
   }
-  else if (estado == 2) {
+  else if (estado == 3) {
     digitalWrite(relUp, HIGH);
     digitalWrite(relDown, LOW);
   }
-  else if (estado == 0) {
+  else if (estado == 1) {
     digitalWrite(relUp, HIGH);
     digitalWrite(relDown, HIGH);
   }
