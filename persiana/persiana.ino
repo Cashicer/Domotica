@@ -17,6 +17,8 @@ int botStop = 5;  //D1
 int relUp = 13;   //D7
 int relDown = 12; //D6
 
+int estado = 0;
+
 WiFiServer server(80);
 
 void setup() {
@@ -50,63 +52,71 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  
-  if (digitalRead(botUp) == LOW){
-    while (digitalRead(botUp) == LOW){}
-    digitalWrite(relDown, HIGH);
-    digitalWrite(relUp, LOW);
+
+  if (digitalRead(botUp) == LOW) {
+    while (digitalRead(botUp) == LOW) {}
+    estado = 1;
   }
-  else if (digitalRead(botDown) == LOW){
-    while (digitalRead(botDown) == LOW){}
-    digitalWrite(relUp, HIGH);
-    digitalWrite(relDown, LOW);
+  else if (digitalRead(botDown) == LOW) {
+    while (digitalRead(botDown) == LOW) {}
+    estado = 2;
   }
-  else if (digitalRead(botStop) == LOW){
-    while (digitalRead(botStop) == LOW){}
-    digitalWrite(relUp, HIGH);
-    digitalWrite(relDown, HIGH);
+  else if (digitalRead(botStop) == LOW) {
+    while (digitalRead(botStop) == LOW) {}
+    estado = 0;
   }
 
   // servidor web
 
   WiFiClient client = server.available();
-  if (!client) return;
+  if (client) {
 
-  Serial.println("new client");
-  while(!client.available())
-        delay(1);
+    Serial.println("new client");
+    while (!client.available())
+      delay(1);
 
-   String req = client.readStringUntil('\r');
-   Serial.println(req);
-   client.flush();
+    String req = client.readStringUntil('\r');
+    Serial.println(req);
+    client.flush();
 
-   int val;
-   String s = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE HTML>\r\n<html>\r\n";
-   if ( req.indexOf("/gpio/0") != -1)
-   {
-     digitalWrite(relUp, HIGH);
-     digitalWrite(relDown, HIGH);
-     s+="Parada";
-   }
-   else if (req.indexOf("/gpio/1") != -1)
-   {
-     digitalWrite(relDown, HIGH);
-     digitalWrite(relUp, LOW);
-     s+="Subiendo";
-   }
-   else if (req.indexOf("/gpio/-1") != -1)
-   {
-     digitalWrite(relUp, HIGH);
-     digitalWrite(relDown, LOW);
-     s+="Bajando";
-   }
-   else
-   { Serial.println("invalid request");
-     client.stop();
-     return;
-   }
-   s += "</html>\n";
-   client.print(s);                    // Enviar el resultado de val al cliente
-   delay(1);
-   Serial.println("Client disonnected"); 
+    int val;
+    String s = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE HTML>\r\n<html>\r\n";
+    if ( req.indexOf("/gpio/0") != -1)
+    {
+      estado = 0;
+      s += "Parada";
+    }
+    else if (req.indexOf("/gpio/1") != -1)
+    {
+      estado = 1;
+      s += "Subiendo";
+    }
+    else if (req.indexOf("/gpio/2") != -1)
+    {
+      estado = 2;
+      s += "Bajando";
+    }
+    else
+    { Serial.println("invalid request");
+      client.stop();
+      return;
+    }
+    s += "</html>\n";
+    client.print(s);                    // Enviar el resultado de val al cliente
+    delay(1);
+    Serial.println("Client disonnected");
+  }
+
+  if (estado == 1) {
+    digitalWrite(relDown, HIGH);
+    digitalWrite(relUp, LOW);
+  }
+  else if (estado == 2) {
+    digitalWrite(relUp, HIGH);
+    digitalWrite(relDown, LOW);
+  }
+  else if (estado == 0) {
+    digitalWrite(relUp, HIGH);
+    digitalWrite(relDown, HIGH);
+  }
 }
