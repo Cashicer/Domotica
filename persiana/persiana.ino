@@ -8,8 +8,11 @@
 #include <ESP8266WiFi.h>
 
 // Credenciales WiFi
-const char* ssid = "MIWIFI_2G_7TVY";
-const char* password = "Tw7ddkMk";
+/*const char* ssid = "MIWIFI_2G_7TVY";
+  const char* password = "Tw7ddkMk";*/
+
+const char* ssid = "OpenWrt";
+const char* password = "E64680C9E8220";
 
 // Definicion de variables y pines asociados
 int botUp = 4;    //D2
@@ -18,7 +21,8 @@ int botStop = 5;  //D1
 int relUp = 13;   //D7
 int relDown = 12; //D6
 
-int estado = 0;
+int estado = 1;
+int prev = 1;
 
 WiFiServer server(80);
 
@@ -35,6 +39,22 @@ void setup() {
   Serial.begin(115200);
   delay(1500);
 
+  connectWiFi();
+}
+
+void loop() {
+
+  //leerBotones();
+  paradaEmergencia();
+  leerPeticionWeb();
+  ejecutarEstado();
+  /*if(estado != prev){
+    Serial.println(estado);
+    prev = estado;
+  }*/
+}
+
+void connectWiFi() {
   Serial.print("Connecting to: ");
   Serial.println(ssid);
   WiFi.begin(ssid, password);
@@ -44,16 +64,13 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("");
-  Serial.println(WiFi.localIP());
 
   server.begin();                                // Iniciamos el servidor
   Serial.println("Server started");
   Serial.println(WiFi.localIP());      // Imprimimos la IP
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-
+void leerBotones() {
   if (digitalRead(botUp) == LOW) {
     while (digitalRead(botUp) == LOW) {}
     estado = 2;
@@ -66,49 +83,76 @@ void loop() {
     while (digitalRead(botStop) == LOW) {}
     estado = 1;
   }
+}
 
+void paradaEmergencia(){
+  if (digitalRead(botStop) == LOW) {
+    while (digitalRead(botStop) == LOW) {}
+    estado = 1;
+  }
+}
+
+void leerPeticionWeb() {
   // servidor web
 
   WiFiClient client = server.available();
-  if (client) {
+  if (!client) return;
 
-    Serial.println("new client");
-    while (!client.available())
-      delay(1);
-
-    String req = client.readStringUntil('\r');
-    Serial.println(req);
-    client.flush();
-
-    int val;
-    String s = "HTTP/1.1 200 OK\r\nContent-Type: text/json\r\n\r\n{\"status\":\"";
-    if ( req.indexOf("/gpio/stop") != -1)
-    {
-      estado = 1;
-      s += "Parada\"";
-    }
-    else if (req.indexOf("/gpio/up") != -1)
-    {
-      estado = 2;
-      s += "Subiendo\"";
-    }
-    else if (req.indexOf("/gpio/down") != -1)
-    {
-      estado = 3;
-      s += "Bajando\"";
-    }
-    else
-    { Serial.println("invalid request");
-      estado = 1;
-      client.stop();
-      return;
-    }
-    s += "}";
-    client.print(s);                    // Enviar el resultado de val al cliente
+  Serial.println("new client");
+  while (!client.available())
     delay(1);
-    Serial.println("Client disonnected");
-  }
 
+  String req = client.readStringUntil('\r');
+  Serial.println(req);
+  client.flush();
+
+  int val;
+  String s = "HTTP/1.1 200 OK\r\nContent-Type: text/json\r\n\r\n{\"status\":\"";
+  if ( req.indexOf("/gpio/stop") != -1)
+  {
+    estado = 1;
+    s += "Parada\"";
+  }
+  else if (req.indexOf("/gpio/up") != -1)
+  {
+    estado = 2;
+    s += "Subiendo\"";
+  }
+  else if (req.indexOf("/gpio/down") != -1)
+  {
+    estado = 3;
+    s += "Bajando\"";
+  }
+  else if (req.indexOf("/gpio/status") != -1)
+  {
+    switch(estado){
+    case 1: 
+       s += "Parada\"";
+    break;
+    case 2: 
+       s += "Subiendo\"";
+    break;
+    case 3: 
+       s += "Bajando\"";
+    break;
+    default: 
+       s += "Invalid status\"";  
+    break;
+    }  
+  }
+  else
+  { Serial.println("invalid request");
+    estado = 1;
+    client.stop();
+    return;
+  }
+  s += "}";
+  client.print(s);                    // Enviar el resultado de val al cliente
+  delay(1);
+  Serial.println("Client disonnected");
+}
+
+void ejecutarEstado(){
   if (estado == 2) {
     digitalWrite(relDown, HIGH);
     digitalWrite(relUp, LOW);
