@@ -11,8 +11,11 @@
 /*const char* ssid = "MIWIFI_2G_7TVY";
   const char* password = "Tw7ddkMk";*/
 
-const char* ssid = "OpenWrt";
-const char* password = "E64680C9E8220";
+/*const char* ssid = "OpenWrt";
+const char* password = "E64680C9E8220";*/
+
+const char* ssid = "RT-N13E_B";
+const char* password = "NidGewTcDLUMHjGNByjn";
 
 // Definicion de variables y pines asociados
 int botUp = 4;    //D2
@@ -23,6 +26,7 @@ int relDown = 12; //D6
 
 int estado = 1;
 int prev = 1;
+int timeout;
 
 WiFiServer server(80);
 
@@ -116,11 +120,13 @@ void leerPeticionWeb() {
   else if (req.indexOf("/gpio/up") != -1)
   {
     estado = 2;
+    timeout = millis();
     s += "Subiendo\"";
   }
   else if (req.indexOf("/gpio/down") != -1)
   {
     estado = 3;
+    timeout = millis();
     s += "Bajando\"";
   }
   else if (req.indexOf("/gpio/status") != -1)
@@ -156,10 +162,12 @@ void ejecutarEstado(){
   if (estado == 2) {
     digitalWrite(relDown, HIGH);
     digitalWrite(relUp, LOW);
+    if(millis() - timeout > 40000) estado = 1;
   }
   else if (estado == 3) {
     digitalWrite(relUp, HIGH);
     digitalWrite(relDown, LOW);
+    if(millis() - timeout > 40000) estado = 1;
   }
   else if (estado == 1) {
     digitalWrite(relUp, HIGH);
