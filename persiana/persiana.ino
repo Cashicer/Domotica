@@ -9,7 +9,7 @@
 
 // Credenciales WiFi
 /*const char* ssid = "MIWIFI_2G_7TVY";
-  const char* password = "Tw7ddkMk";*/
+const char* password = "Tw7ddkMk";*/
 
 /*const char* ssid = "OpenWrt";
 const char* password = "E64680C9E8220";*/
@@ -27,6 +27,7 @@ int relDown = 12; //D6
 int estado = 1;
 int prev = 1;
 int timeout;
+int new_client_timeout;
 
 WiFiServer server(80);
 
@@ -52,6 +53,7 @@ void loop() {
   paradaEmergencia();
   leerPeticionWeb();
   ejecutarEstado();
+  //if(WiFi.status() != WL_CONNECTED) connectWiFi();
   /*if(estado != prev){
     Serial.println(estado);
     prev = estado;
@@ -103,8 +105,12 @@ void leerPeticionWeb() {
   if (!client) return;
 
   Serial.println("new client");
-  while (!client.available())
-    delay(1);
+  new_client_timeout = millis();
+  while (!client.available()){
+    //delay(1);
+    if(millis()-new_client_timeout > 5000) break;
+  }
+  if(millis()-new_client_timeout > 5000) return;    
 
   String req = client.readStringUntil('\r');
   Serial.println(req);
