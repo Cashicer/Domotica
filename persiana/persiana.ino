@@ -8,14 +8,14 @@
 #include <ESP8266WiFi.h>
 
 // Credenciales WiFi
-/*const char* ssid = "MIWIFI_2G_7TVY";
-const char* password = "Tw7ddkMk";*/
+const char* ssid = "MIWIFI_2G_7TVY";
+const char* password = "Tw7ddkMk";
 
 /*const char* ssid = "OpenWrt";
 const char* password = "E64680C9E8220";*/
 
-const char* ssid = "RT-N13E_B";
-const char* password = "NidGewTcDLUMHjGNByjn";
+/*const char* ssid = "RT-N13E_B";
+const char* password = "NidGewTcDLUMHjGNByjn";*/
 
 // Definicion de variables y pines asociados
 int botUp = 4;    //D2
@@ -27,7 +27,6 @@ int relDown = 12; //D6
 int estado = 1;
 int prev = 1;
 int timeout;
-int new_client_timeout;
 
 WiFiServer server(80);
 
@@ -105,12 +104,9 @@ void leerPeticionWeb() {
   if (!client) return;
 
   Serial.println("new client");
-  new_client_timeout = millis();
   while (!client.available()){
-    //delay(1);
-    if(millis()-new_client_timeout > 5000) break;
-  }
-  if(millis()-new_client_timeout > 5000) return;    
+    delay(1);
+  }   
 
   String req = client.readStringUntil('\r');
   Serial.println(req);
@@ -134,6 +130,12 @@ void leerPeticionWeb() {
     estado = 3;
     timeout = millis();
     s += "Bajando\"";
+  }
+  else if (req.indexOf("/favicon.ico") != -1)
+  {
+    Serial.println("invalid request");
+    client.stop();
+    return;
   }
   else if (req.indexOf("/gpio/status") != -1)
   {
