@@ -32,9 +32,9 @@ WiFiServer server(80);
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(botUp, INPUT);
+  /*pinMode(botUp, INPUT);
   pinMode(botDown, INPUT);
-  pinMode(botStop, INPUT);
+  pinMode(botStop, INPUT);*/
   pinMode(relUp, OUTPUT);
   pinMode(relDown, OUTPUT);
   digitalWrite(relUp, HIGH);
@@ -49,7 +49,7 @@ void setup() {
 void loop() {
 
   //leerBotones();
-  paradaEmergencia();
+  //paradaEmergencia();
   leerPeticionWeb();
   ejecutarEstado();
   //if(WiFi.status() != WL_CONNECTED) connectWiFi();
