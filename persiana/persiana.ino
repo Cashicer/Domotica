@@ -21,8 +21,8 @@ const char* password = "NidGewTcDLUMHjGNByjn";*/
 int botUp = 4;    //D2
 int botDown = 16; //D0
 int botStop = 5;  //D1
-int relUp = 13;   //D7
-int relDown = 12; //D6
+int relUp = 12;   //D6
+int relDown = 13; //D7
 
 int estado = 1;
 int prev = 1;
