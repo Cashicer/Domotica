@@ -24,8 +24,8 @@ int botStop = 5;  //D1
 int relUp = 12;   //D6
 int relDown = 13; //D7
 
-int estado = 1;
-int prev = 1;
+int estado = 1; // 1 Parada; 2 Subiendo; 3 Bajando
+int posicion = -1; // 0 Bajada; 4 Agujeros; 6 Middle-down; 9 Subida
 int timeout;
 
 WiFiServer server(80);
@@ -53,10 +53,6 @@ void loop() {
   leerPeticionWeb();
   ejecutarEstado();
   //if(WiFi.status() != WL_CONNECTED) connectWiFi();
-  /*if(estado != prev){
-    Serial.println(estado);
-    prev = estado;
-  }*/
 }
 
 void connectWiFi() {
